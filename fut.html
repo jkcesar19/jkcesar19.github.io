@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Táctico de Fútbol Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .soccer-field {
+            background: #15803d;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            border: 5px solid #fff;
+            border-radius: 2px;
+            aspect-ratio: 1.5;
+        }
+
+        .player-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .player-card {
+            transition: all 0.2s;
+        }
+
+        .player-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button {
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            border-bottom-width: 3px;
+            margin-bottom: -1px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <!-- Contenedor principal con pestañas -->
+    <div class="container mx-auto p-4" x-data="{ 
+        activeTab: 'admin',
+        localPlayerTab: 'titulares',
+        visitorPlayerTab: 'titulares'
+    }">
+        <!-- Navegación por pestañas -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button @click="activeTab = 'admin'" :class="{ 
+                    'border-blue-500 text-blue-600 font-bold': activeTab === 'admin',
+                    'text-gray-500 hover:text-gray-700': activeTab !== 'admin'
+                }" class="py-2 px-4 tab-button mr-1">
+                <i class="fas fa-cog mr-2"></i>Administración
+            </button>
+            <button @click="activeTab = 'view'" :class="{ 
+                    'border-blue-500 text-blue-600 font-bold': activeTab === 'view',
+                    'text-gray-500 hover:text-gray-700': activeTab !== 'view'
+                }" class="py-2 px-4 tab-button">
+                <i class="fas fa-eye mr-2"></i>Vista Pública
+            </button>
+        </div>
+        
+        <!-- Pestaña de Administración -->
+        <div x-show="activeTab === 'admin'" class="tab-content active">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800">Configuración del Partido</h1>
+
+            <!-- Formulario de configuración -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Datos Generales</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Torneo</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="tournament-name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Estadio</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="stadium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                        <input type="date"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="match-date">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+                        <input type="time"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="match-time">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración de equipos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Equipo Local -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Equipo Local</h2>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="local-team-name">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Color Principal</label>
+                        <input type="color" class="w-full h-10 p-1 border border-gray-300 rounded cursor-pointer"
+                            id="local-team-color" value="#2563eb">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Escudo (URL)</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="local-team-logo" placeholder="https://...">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Entrenador</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="local-team-coach">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Formación</label>
+                        <select
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="local-team-formation">
+                            <option value="1-2-1-2">1-2-1-2</option>
+                            <option value="1-2-2-1">1-2-2-1</option>
+                            <option value="1-3-1-1">1-3-1-1</option>
+                            <option value="1-1-3-1">1-1-3-1</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Equipo Visitante -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Equipo Visitante</h2>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="visitor-team-name">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Color Principal</label>
+                        <input type="color" class="w-full h-10 p-1 border border-gray-300 rounded cursor-pointer"
+                            id="visitor-team-color" value="#6b7280">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Escudo (URL)</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="visitor-team-logo" placeholder="https://...">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Entrenador</label>
+                        <input type="text"
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="visitor-team-coach">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Formación</label>
+                        <select
+                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            id="visitor-team-formation">
+                            <option value="1-2-1-2">1-2-1-2</option>
+                            <option value="1-2-2-1">1-2-2-1</option>
+                            <option value="1-3-1-1">1-3-1-1</option>
+                            <option value="1-1-3-1">1-1-3-1</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jugadores -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Jugadores Local -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Jugadores - Local</h2>
+                        <div class="flex border-b border-gray-200">
+                            <button @click="localPlayerTab = 'titulares'" :class="{ 
+                                    'border-blue-500 text-blue-600 font-medium': localPlayerTab === 'titulares',
+                                    'text-gray-500 hover:text-gray-700': localPlayerTab !== 'titulares'
+                                }" class="py-1 px-3 text-sm tab-button">
+                                Titulares
+                            </button>
+                            <button @click="localPlayerTab = 'suplentes'" :class="{ 
+                                    'border-blue-500 text-blue-600 font-medium': localPlayerTab === 'suplentes',
+                                    'text-gray-500 hover:text-gray-700': localPlayerTab !== 'suplentes'
+                                }" class="py-1 px-3 text-sm tab-button">
+                                Suplentes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Titulares Local -->
+                    <div x-show="localPlayerTab === 'titulares'" class="mb-4">
+                        <div id="local-team-titulares-container" class="space-y-2">
+                            <!-- Titulares se agregarán aquí dinámicamente -->
+                        </div>
+                        <button onclick="addPlayer('local', 'titulares')"
+                            class="mt-3 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
+                            <i class="fas fa-plus mr-1"></i>Agregar Titular
+                        </button>
+                    </div>
+
+                    <!-- Suplentes Local -->
+                    <div x-show="localPlayerTab === 'suplentes'">
+                        <div id="local-team-suplentes-container" class="space-y-2">
+                            <!-- Suplentes se agregarán aquí dinámicamente -->
+                        </div>
+                        <button onclick="addPlayer('local', 'suplentes')"
+                            class="mt-3 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
+                            <i class="fas fa-plus mr-1"></i>Agregar Suplente
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Jugadores Visitante -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Jugadores - Visitante</h2>
+                        <div class="flex border-b border-gray-200">
+                            <button @click="visitorPlayerTab = 'titulares'" :class="{ 
+                                    'border-blue-500 text-blue-600 font-medium': visitorPlayerTab === 'titulares',
+                                    'text-gray-500 hover:text-gray-700': visitorPlayerTab !== 'titulares'
+                                }" class="py-1 px-3 text-sm tab-button">
+                                Titulares
+                            </button>
+                            <button @click="visitorPlayerTab = 'suplentes'" :class="{ 
+                                    'border-blue-500 text-blue-600 font-medium': visitorPlayerTab === 'suplentes',
+                                    'text-gray-500 hover:text-gray-700': visitorPlayerTab !== 'suplentes'
+                                }" class="py-1 px-3 text-sm tab-button">
+                                Suplentes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Titulares Visitante -->
+                    <div x-show="visitorPlayerTab === 'titulares'" class="mb-4">
+                        <div id="visitor-team-titulares-container" class="space-y-2">
+                            <!-- Titulares se agregarán aquí dinámicamente -->
+                        </div>
+                        <button onclick="addPlayer('visitor', 'titulares')"
+                            class="mt-3 bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm">
+                            <i class="fas fa-plus mr-1"></i>Agregar Titular
+                        </button>
+                    </div>
+
+                    <!-- Suplentes Visitante -->
+                    <div x-show="visitorPlayerTab === 'suplentes'">
+                        <div id="visitor-team-suplentes-container" class="space-y-2">
+                            <!-- Suplentes se agregarán aquí dinámicamente -->
+                        </div>
+                        <button onclick="addPlayer('visitor', 'suplentes')"
+                            class="mt-3 bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm">
+                            <i class="fas fa-plus mr-1"></i>Agregar Suplente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de guardar -->
+            <div class="text-center">
+                <button onclick="saveMatchConfig()"
+                    class="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-bold text-lg shadow-md transition-all">
+                    <i class="fas fa-save mr-2"></i>Guardar Configuración
+                </button>
+            </div>
+        </div>
+
+        <!-- Pestaña de Vista Pública -->
+        <div x-show="activeTab === 'view'" class="tab-content">
+            <div id="match-view-container">
+                <!-- Aquí se cargará la vista del partido con los datos guardados -->
+                <div class="text-center py-10 text-gray-500">
+                    <i class="fas fa-futbol text-4xl mb-4"></i>
+                    <p>Configura el partido en la pestaña de Administración</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alpine JS para las pestañas -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- Script para manejar la lógica -->
+    <script>
+        // Datos de ejemplo con suplentes
+        let matchData = {
+            tournament: "Copa Internacional",
+            stadium: "Estadio Azteca",
+            date: "2023-11-15",
+            time: "20:00",
+            teams: {
+                local: {
+                    name: "Equipo Azul",
+                    color: "#2563eb",
+                    logo: "",
+                    coach: "Carlos Bianchi",
+                    formation: "1-2-1-2",
+                    titulares: [
+                        { number: 1, name: "Hugo Lloris", position: "POR" },
+                        { number: 2, name: "Sergio Ramos", position: "DEF" },
+                        { number: 3, name: "Virgil van Dijk", position: "DEF" },
+                        { number: 4, name: "Luka Modrić", position: "MED" },
+                        { number: 5, name: "Lionel Messi", position: "DEL" },
+                        { number: 6, name: "Kylian Mbappé", position: "DEL" }
+                    ],
+                    suplentes: [
+                        { number: 7, name: "Robert Lewandowski", position: "DEL" },
+                        { number: 8, name: "Kevin De Bruyne", position: "MED" },
+                        { number: 9, name: "Erling Haaland", position: "DEL" },
+                        { number: 10, name: "Paul Pogba", position: "MED" },
+                        { number: 11, name: "Raheem Sterling", position: "DEL" },
+                        { number: 12, name: "Harry Kane", position: "DEL" }
+                    ]
+                },
+                visitor: {
+                    name: "Equipo Blanco",
+                    color: "#6b7280",
+                    logo: "",
+                    coach: "José Mourinho",
+                    formation: "1-2-1-2",
+                    titulares: [
+                        { number: 1, name: "Manuel Neuer", position: "POR" },
+                        { number: 2, name: "Trent Alexander", position: "DEF" },
+                        { number: 3, name: "Rúben Dias", position: "DEF" },
+                        { number: 4, name: "Joshua Kimmich", position: "MED" },
+                        { number: 5, name: "Cristiano Ronaldo", position: "DEL" },
+                        { number: 6, name: "Neymar Jr", position: "DEL" }
+                    ],
+                    suplentes: [
+                        { number: 7, name: "Karim Benzema", position: "DEL" },
+                        { number: 8, name: "Mohamed Salah", position: "DEL" },
+                        { number: 9, name: "Sadio Mané", position: "DEL" },
+                        { number: 10, name: "Toni Kroos", position: "MED" },
+                        { number: 11, name: "Eden Hazard", position: "DEL" },
+                        { number: 12, name: "Casemiro", position: "MED" }
+                    ]
+                }
+            }
+        };
+
+        // Cargar datos iniciales
+        document.addEventListener('DOMContentLoaded', function () {
+            loadInitialData();
+            renderPlayers('local', 'titulares');
+            renderPlayers('local', 'suplentes');
+            renderPlayers('visitor', 'titulares');
+            renderPlayers('visitor', 'suplentes');
+        });
+
+        // Cargar datos iniciales en los formularios
+        function loadInitialData() {
+            document.getElementById('tournament-name').value = matchData.tournament;
+            document.getElementById('stadium').value = matchData.stadium;
+            document.getElementById('match-date').value = matchData.date;
+            document.getElementById('match-time').value = matchData.time;
+
+            // Equipo local
+            document.getElementById('local-team-name').value = matchData.teams.local.name;
+            document.getElementById('local-team-color').value = matchData.teams.local.color;
+            document.getElementById('local-team-logo').value = matchData.teams.local.logo;
+            document.getElementById('local-team-coach').value = matchData.teams.local.coach;
+            document.getElementById('local-team-formation').value = matchData.teams.local.formation;
+
+            // Equipo visitante
+            document.getElementById('visitor-team-name').value = matchData.teams.visitor.name;
+            document.getElementById('visitor-team-color').value = matchData.teams.visitor.color;
+            document.getElementById('visitor-team-logo').value = matchData.teams.visitor.logo;
+            document.getElementById('visitor-team-coach').value = matchData.teams.visitor.coach;
+            document.getElementById('visitor-team-formation').value = matchData.teams.visitor.formation;
+        }
+
+        // Agregar jugador
+        function addPlayer(team, type) {
+            const containerId = `${team}-team-${type}-container`;
+            const container = document.getElementById(containerId);
+
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'bg-gray-50 p-3 rounded player-card';
+            playerDiv.innerHTML = `
+                <div class="grid grid-cols-12 gap-2 items-center">
+                    <div class="col-span-2">
+                        <input type="number" placeholder="N°" class="w-full p-1 border border-gray-300 rounded player-number" min="1" max="99">
+                    </div>
+                    <div class="col-span-7">
+                        <input type="text" placeholder="Nombre" class="w-full p-1 border border-gray-300 rounded player-name">
+                    </div>
+                    <div class="col-span-2">
+                        <select class="w-full p-1 border border-gray-300 rounded player-position">
+                            <option value="POR">POR</option>
+                            <option value="DEF">DEF</option>
+                            <option value="MED">MED</option>
+                            <option value="DEL">DEL</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1 text-right">
+                        <button onclick="this.parentNode.parentNode.parentNode.remove()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(playerDiv);
+        }
+
+        // Renderizar jugadores existentes
+        function renderPlayers(team, type) {
+            const containerId = `${team}-team-${type}-container`;
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            matchData.teams[team][type].forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'bg-gray-50 p-3 rounded player-card';
+                playerDiv.innerHTML = `
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-2">
+                            <input type="number" value="${player.number}" class="w-full p-1 border border-gray-300 rounded player-number" min="1" max="99">
+                        </div>
+                        <div class="col-span-7">
+                            <input type="text" value="${player.name}" class="w-full p-1 border border-gray-300 rounded player-name">
+                        </div>
+                        <div class="col-span-2">
+                            <select class="w-full p-1 border border-gray-300 rounded player-position">
+                                <option value="POR" ${player.position === 'POR' ? 'selected' : ''}>POR</option>
+                                <option value="DEF" ${player.position === 'DEF' ? 'selected' : ''}>DEF</option>
+                                <option value="MED" ${player.position === 'MED' ? 'selected' : ''}>MED</option>
+                                <option value="DEL" ${player.position === 'DEL' ? 'selected' : ''}>DEL</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1 text-right">
+                            <button onclick="this.parentNode.parentNode.parentNode.remove()" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(playerDiv);
+            });
+        }
+
+        // Guardar configuración
+        function saveMatchConfig() {
+            // 1. Recopilar datos (código existente)
+            matchData = {
+                tournament: document.getElementById('tournament-name').value,
+                stadium: document.getElementById('stadium').value,
+                date: document.getElementById('match-date').value,
+                time: document.getElementById('match-time').value,
+                teams: {
+                    local: getTeamData('local'),
+                    visitor: getTeamData('visitor')
+                }
+            };
+
+            // 2. Guardar en localStorage
+            localStorage.setItem('tacticalMatchData', JSON.stringify(matchData));
+
+            // 3. Redirigir a visualización (opcional)
+            window.location.href = "futbol/visualizacion.html "; // Asegúrate de que el nombre coincida
+        }
+
+        // Obtener datos de un equipo
+        function getTeamData(team) {
+            return {
+                name: document.getElementById(`${team}-team-name`).value,
+                color: document.getElementById(`${team}-team-color`).value,
+                logo: document.getElementById(`${team}-team-logo`).value,
+                coach: document.getElementById(`${team}-team-coach`).value,
+                formation: document.getElementById(`${team}-team-formation`).value,
+                titulares: getPlayersData(`${team}-team-titulares-container`),
+                suplentes: getPlayersData(`${team}-team-suplentes-container`)
+            };
+        }
+
+        // Obtener datos de jugadores de un contenedor
+        function getPlayersData(containerId) {
+            const container = document.getElementById(containerId);
+            const playerElements = container.querySelectorAll('.bg-gray-50');
+
+            const players = [];
+            playerElements.forEach(playerEl => {
+                players.push({
+                    number: parseInt(playerEl.querySelector('.player-number').value),
+                    name: playerEl.querySelector('.player-name').value,
+                    position: playerEl.querySelector('.player-position').value
+                });
+            });
+
+            return players;
+        }
+
+        // Renderizar vista del partido
+        function renderMatchView() {
+            const container = document.getElementById('match-view-container');
+
+            // Crear HTML para la vista del partido
+            container.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <h1 class="text-2xl font-bold text-center mb-2">${matchData.tournament}</h1>
+                    <p class="text-center text-gray-600 mb-6">${matchData.stadium} | ${formatDate(matchData.date)} ${matchData.time}</p>
+                    
+                    <!-- Marcador -->
+                    <div class="bg-gray-800 text-white p-4 rounded-xl shadow-lg mb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div class="flex-1 text-center">
+                                <div class="text-xl font-bold" style="color: ${matchData.teams.local.color}">${matchData.teams.local.name}</div>
+                                <div class="text-5xl font-bold">0</div>
+                            </div>
+                            
+                            <div class="flex flex-col items-center">
+                                <div class="text-2xl font-mono font-bold bg-gray-700 px-6 py-1 rounded-lg">00'</div>
+                                <div class="text-sm mt-1 opacity-80">Primer Tiempo</div>
+                            </div>
+                            
+                            <div class="flex-1 text-center">
+                                <div class="text-xl font-bold" style="color: ${matchData.teams.visitor.color}">${matchData.teams.visitor.name}</div>
+                                <div class="text-5xl font-bold">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campo de fútbol -->
+                    <div class="soccer-field w-full h-auto min-h-[500px] mx-auto mb-6 relative">
+                        <!-- Aquí iría el campo con jugadores posicionados según la formación -->
+                        <div class="text-center absolute inset-0 flex items-center justify-center text-gray-400">
+                            Vista previa del campo con formaciones ${matchData.teams.local.formation} vs ${matchData.teams.visitor.formation}
+                        </div>
+                    </div>
+                    
+                    <!-- Equipos -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Equipo Local -->
+                        <div class="bg-white border rounded-lg p-4 shadow-sm">
+                            <h3 class="text-xl font-bold mb-3 flex items-center">
+                                <div class="w-8 h-8 rounded-full mr-2" style="background: ${matchData.teams.local.color}"></div>
+                                ${matchData.teams.local.name}
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-3">Entrenador: ${matchData.teams.local.coach}</p>
+                            
+                            <div class="flex border-b border-gray-200 mb-3">
+                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Titulares</button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                ${renderTeamPlayers(matchData.teams.local.titulares)}
+                            </div>
+                            
+                            <div class="flex border-b border-gray-200 mb-3">
+                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Suplentes</button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${renderTeamPlayers(matchData.teams.local.suplentes)}
+                            </div>
+                        </div>
+                        
+                        <!-- Equipo Visitante -->
+                        <div class="bg-white border rounded-lg p-4 shadow-sm">
+                            <h3 class="text-xl font-bold mb-3 flex items-center">
+                                <div class="w-8 h-8 rounded-full mr-2" style="background: ${matchData.teams.visitor.color}"></div>
+                                ${matchData.teams.visitor.name}
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-3">Entrenador: ${matchData.teams.visitor.coach}</p>
+                            
+                            <div class="flex border-b border-gray-200 mb-3">
+                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Titulares</button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                ${renderTeamPlayers(matchData.teams.visitor.titulares)}
+                            </div>
+                            
+                            <div class="flex border-b border-gray-200 mb-3">
+                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Suplentes</button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${renderTeamPlayers(matchData.teams.visitor.suplentes)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar jugadores para la vista
+        function renderTeamPlayers(players) {
+            return players.map(player => `
+                <div class="bg-gray-50 p-2 rounded text-center text-sm player-card">
+                    <div class="font-bold">${player.number}</div>
+                    <div>${player.name}</div>
+                    <div class="text-xs text-gray-500">${player.position}</div>
+                </div>
+            `).join('');
+        }
+
+        // Formatear fecha
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('es-ES', options);
+        }
+    </script>
+</body>
+
+</html>

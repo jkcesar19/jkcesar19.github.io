@@ -1,640 +1,637 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html lang="es" class="h-full bg-gray-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Táctico de Fútbol Completo</title>
+    <title>Dashboard - Cesar Llaguento Carlos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .soccer-field {
-            background: #15803d;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            border: 5px solid #fff;
-            border-radius: 2px;
-            aspect-ratio: 1.5;
+        /* Transiciones para el menú móvil */
+        #mobile-menu {
+            transition: opacity 0.3s ease;
         }
-
-        .player-badge {
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border: 2px solid white;
+        #mobile-menu .menu-content {
+            transition: transform 0.3s ease;
+            transform: translateX(-100%);
         }
-
-        .tab-content {
-            display: none;
+        #mobile-menu:not(.hidden) .menu-content {
+            transform: translateX(0);
         }
-
-        .tab-content.active {
-            display: block;
+        /* Efecto hover para cards */
+        .card-hover {
+            transition: all 0.3s ease;
         }
-
-        .player-card {
-            transition: all 0.2s;
-        }
-
-        .player-card:hover {
+        .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-
-        .tab-button {
-            transition: all 0.3s;
+        /* Estilo para menú desplegable */
+        .dropdown-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
         }
-
-        .tab-button.active {
-            border-bottom-width: 3px;
-            margin-bottom: -1px;
+        .dropdown-menu.show {
+            max-height: 500px;
+            transition: max-height 0.5s ease-in;
+        }
+        .rotate-90 {
+            transform: rotate(90deg);
         }
     </style>
 </head>
-
-<body class="bg-gray-100 min-h-screen">
-    <!-- Contenedor principal con pestañas -->
-    <div class="container mx-auto p-4" x-data="{ 
-        activeTab: 'admin',
-        localPlayerTab: 'titulares',
-        visitorPlayerTab: 'titulares'
-    }">
-        <!-- Navegación por pestañas -->
-        <div class="flex border-b border-gray-200 mb-6">
-            <button @click="activeTab = 'admin'" :class="{ 
-                    'border-blue-500 text-blue-600 font-bold': activeTab === 'admin',
-                    'text-gray-500 hover:text-gray-700': activeTab !== 'admin'
-                }" class="py-2 px-4 tab-button mr-1">
-                <i class="fas fa-cog mr-2"></i>Administración
-            </button>
-            <button @click="activeTab = 'view'" :class="{ 
-                    'border-blue-500 text-blue-600 font-bold': activeTab === 'view',
-                    'text-gray-500 hover:text-gray-700': activeTab !== 'view'
-                }" class="py-2 px-4 tab-button">
-                <i class="fas fa-eye mr-2"></i>Vista Pública
-            </button>
-        </div>
-        
-        <!-- Pestaña de Administración -->
-        <div x-show="activeTab === 'admin'" class="tab-content active">
-            <h1 class="text-2xl font-bold mb-6 text-gray-800">Configuración del Partido</h1>
-
-            <!-- Formulario de configuración -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Datos Generales</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Torneo</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="tournament-name">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Estadio</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="stadium">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                        <input type="date"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="match-date">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
-                        <input type="time"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="match-time">
-                    </div>
+<body class="h-full">
+    <!-- Menú móvil -->
+    <div id="mobile-menu" class="hidden fixed inset-0 z-50 md:hidden">
+        <div id="mobile-menu-backdrop" class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+        <div class="fixed inset-y-0 left-0 flex max-w-xs w-full">
+            <div class="menu-content relative flex flex-col w-full max-w-xs pt-5 pb-4 bg-indigo-700 overflow-y-auto">
+                <div class="flex items-center justify-end px-4">
+                    <button id="mobile-menu-close" class="text-white p-2 rounded-md hover:bg-indigo-600 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-
-            <!-- Configuración de equipos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Equipo Local -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Equipo Local</h2>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="local-team-name">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Color Principal</label>
-                        <input type="color" class="w-full h-10 p-1 border border-gray-300 rounded cursor-pointer"
-                            id="local-team-color" value="#2563eb">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Escudo (URL)</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="local-team-logo" placeholder="https://...">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Entrenador</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="local-team-coach">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Formación</label>
-                        <select
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="local-team-formation">
-                            <option value="1-2-1-2">1-2-1-2</option>
-                            <option value="1-2-2-1">1-2-2-1</option>
-                            <option value="1-3-1-1">1-3-1-1</option>
-                            <option value="1-1-3-1">1-1-3-1</option>
-                        </select>
-                    </div>
+                <div class="flex items-center flex-shrink-0 px-4">
+                    <h1 class="text-white text-2xl font-bold">Cesar Llaguento</h1>
                 </div>
-
-                <!-- Equipo Visitante -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Equipo Visitante</h2>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="visitor-team-name">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Color Principal</label>
-                        <input type="color" class="w-full h-10 p-1 border border-gray-300 rounded cursor-pointer"
-                            id="visitor-team-color" value="#6b7280">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Escudo (URL)</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="visitor-team-logo" placeholder="https://...">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Entrenador</label>
-                        <input type="text"
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="visitor-team-coach">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Formación</label>
-                        <select
-                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            id="visitor-team-formation">
-                            <option value="1-2-1-2">1-2-1-2</option>
-                            <option value="1-2-2-1">1-2-2-1</option>
-                            <option value="1-3-1-1">1-3-1-1</option>
-                            <option value="1-1-3-1">1-1-3-1</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Jugadores -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Jugadores Local -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-gray-700">Jugadores - Local</h2>
-                        <div class="flex border-b border-gray-200">
-                            <button @click="localPlayerTab = 'titulares'" :class="{ 
-                                    'border-blue-500 text-blue-600 font-medium': localPlayerTab === 'titulares',
-                                    'text-gray-500 hover:text-gray-700': localPlayerTab !== 'titulares'
-                                }" class="py-1 px-3 text-sm tab-button">
-                                Titulares
+                <div class="mt-5 flex-1 flex flex-col">
+                    <nav class="flex-1 px-2 pb-4 space-y-1">
+                        <a href="#" class="bg-indigo-800 text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                        </a>
+                        
+                        <!-- Botón desplegable para Personas -->
+                        <div class="space-y-1">
+                            <button id="mobile-personas-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users mr-3"></i> Personas
+                                </div>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
-                            <button @click="localPlayerTab = 'suplentes'" :class="{ 
-                                    'border-blue-500 text-blue-600 font-medium': localPlayerTab === 'suplentes',
-                                    'text-gray-500 hover:text-gray-700': localPlayerTab !== 'suplentes'
-                                }" class="py-1 px-3 text-sm tab-button">
-                                Suplentes
+                            <div id="mobile-personas-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-user-tie mr-3"></i> Trabajadores
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-truck mr-3"></i> Proveedores
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-user-friends mr-3"></i> Clientes
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-cog mr-3"></i> Usuarios
+                        </a>
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-boxes mr-3"></i> Productos
+                        </a>
+                        
+                        <!-- Botón desplegable para Inventario -->
+                        <div class="space-y-1">
+                            <button id="mobile-inventario-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-warehouse mr-3"></i> Inventario
+                                </div>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
+                            <div id="mobile-inventario-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-box-open mr-3"></i> Kardex
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-exchange-alt mr-3"></i> Devoluciones
+                                </a>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Titulares Local -->
-                    <div x-show="localPlayerTab === 'titulares'" class="mb-4">
-                        <div id="local-team-titulares-container" class="space-y-2">
-                            <!-- Titulares se agregarán aquí dinámicamente -->
-                        </div>
-                        <button onclick="addPlayer('local', 'titulares')"
-                            class="mt-3 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
-                            <i class="fas fa-plus mr-1"></i>Agregar Titular
-                        </button>
-                    </div>
-
-                    <!-- Suplentes Local -->
-                    <div x-show="localPlayerTab === 'suplentes'">
-                        <div id="local-team-suplentes-container" class="space-y-2">
-                            <!-- Suplentes se agregarán aquí dinámicamente -->
-                        </div>
-                        <button onclick="addPlayer('local', 'suplentes')"
-                            class="mt-3 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
-                            <i class="fas fa-plus mr-1"></i>Agregar Suplente
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Jugadores Visitante -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-gray-700">Jugadores - Visitante</h2>
-                        <div class="flex border-b border-gray-200">
-                            <button @click="visitorPlayerTab = 'titulares'" :class="{ 
-                                    'border-blue-500 text-blue-600 font-medium': visitorPlayerTab === 'titulares',
-                                    'text-gray-500 hover:text-gray-700': visitorPlayerTab !== 'titulares'
-                                }" class="py-1 px-3 text-sm tab-button">
-                                Titulares
+                        
+                        <!-- Botón desplegable para Transacciones -->
+                        <div class="space-y-1">
+                            <button id="mobile-transacciones-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exchange-alt mr-3"></i> Transacciones
+                                </div>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
-                            <button @click="visitorPlayerTab = 'suplentes'" :class="{ 
-                                    'border-blue-500 text-blue-600 font-medium': visitorPlayerTab === 'suplentes',
-                                    'text-gray-500 hover:text-gray-700': visitorPlayerTab !== 'suplentes'
-                                }" class="py-1 px-3 text-sm tab-button">
-                                Suplentes
-                            </button>
+                            <div id="mobile-transacciones-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-cash-register mr-3"></i> Caja
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-shopping-cart mr-3"></i> Ventas
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-shopping-basket mr-3"></i> Compras
+                                </a>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Titulares Visitante -->
-                    <div x-show="visitorPlayerTab === 'titulares'" class="mb-4">
-                        <div id="visitor-team-titulares-container" class="space-y-2">
-                            <!-- Titulares se agregarán aquí dinámicamente -->
-                        </div>
-                        <button onclick="addPlayer('visitor', 'titulares')"
-                            class="mt-3 bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm">
-                            <i class="fas fa-plus mr-1"></i>Agregar Titular
-                        </button>
-                    </div>
-
-                    <!-- Suplentes Visitante -->
-                    <div x-show="visitorPlayerTab === 'suplentes'">
-                        <div id="visitor-team-suplentes-container" class="space-y-2">
-                            <!-- Suplentes se agregarán aquí dinámicamente -->
-                        </div>
-                        <button onclick="addPlayer('visitor', 'suplentes')"
-                            class="mt-3 bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm">
-                            <i class="fas fa-plus mr-1"></i>Agregar Suplente
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botón de guardar -->
-            <div class="text-center">
-                <button onclick="saveMatchConfig()"
-                    class="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-bold text-lg shadow-md transition-all">
-                    <i class="fas fa-save mr-2"></i>Guardar Configuración
-                </button>
-            </div>
-        </div>
-
-        <!-- Pestaña de Vista Pública -->
-        <div x-show="activeTab === 'view'" class="tab-content">
-            <div id="match-view-container">
-                <!-- Aquí se cargará la vista del partido con los datos guardados -->
-                <div class="text-center py-10 text-gray-500">
-                    <i class="fas fa-futbol text-4xl mb-4"></i>
-                    <p>Configura el partido en la pestaña de Administración</p>
+                        
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3"></i> Reportes
+                        </a>
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cog mr-3"></i> Configuración
+                        </a>
+                    </nav>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Alpine JS para las pestañas -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-    <!-- Script para manejar la lógica -->
-    <script>
-        // Datos de ejemplo con suplentes
-        let matchData = {
-            tournament: "Copa Internacional",
-            stadium: "Estadio Azteca",
-            date: "2023-11-15",
-            time: "20:00",
-            teams: {
-                local: {
-                    name: "Equipo Azul",
-                    color: "#2563eb",
-                    logo: "",
-                    coach: "Carlos Bianchi",
-                    formation: "1-2-1-2",
-                    titulares: [
-                        { number: 1, name: "Hugo Lloris", position: "POR" },
-                        { number: 2, name: "Sergio Ramos", position: "DEF" },
-                        { number: 3, name: "Virgil van Dijk", position: "DEF" },
-                        { number: 4, name: "Luka Modrić", position: "MED" },
-                        { number: 5, name: "Lionel Messi", position: "DEL" },
-                        { number: 6, name: "Kylian Mbappé", position: "DEL" }
-                    ],
-                    suplentes: [
-                        { number: 7, name: "Robert Lewandowski", position: "DEL" },
-                        { number: 8, name: "Kevin De Bruyne", position: "MED" },
-                        { number: 9, name: "Erling Haaland", position: "DEL" },
-                        { number: 10, name: "Paul Pogba", position: "MED" },
-                        { number: 11, name: "Raheem Sterling", position: "DEL" },
-                        { number: 12, name: "Harry Kane", position: "DEL" }
-                    ]
-                },
-                visitor: {
-                    name: "Equipo Blanco",
-                    color: "#6b7280",
-                    logo: "",
-                    coach: "José Mourinho",
-                    formation: "1-2-1-2",
-                    titulares: [
-                        { number: 1, name: "Manuel Neuer", position: "POR" },
-                        { number: 2, name: "Trent Alexander", position: "DEF" },
-                        { number: 3, name: "Rúben Dias", position: "DEF" },
-                        { number: 4, name: "Joshua Kimmich", position: "MED" },
-                        { number: 5, name: "Cristiano Ronaldo", position: "DEL" },
-                        { number: 6, name: "Neymar Jr", position: "DEL" }
-                    ],
-                    suplentes: [
-                        { number: 7, name: "Karim Benzema", position: "DEL" },
-                        { number: 8, name: "Mohamed Salah", position: "DEL" },
-                        { number: 9, name: "Sadio Mané", position: "DEL" },
-                        { number: 10, name: "Toni Kroos", position: "MED" },
-                        { number: 11, name: "Eden Hazard", position: "DEL" },
-                        { number: 12, name: "Casemiro", position: "MED" }
-                    ]
-                }
-            }
-        };
-
-        // Cargar datos iniciales
-        document.addEventListener('DOMContentLoaded', function () {
-            loadInitialData();
-            renderPlayers('local', 'titulares');
-            renderPlayers('local', 'suplentes');
-            renderPlayers('visitor', 'titulares');
-            renderPlayers('visitor', 'suplentes');
-        });
-
-        // Cargar datos iniciales en los formularios
-        function loadInitialData() {
-            document.getElementById('tournament-name').value = matchData.tournament;
-            document.getElementById('stadium').value = matchData.stadium;
-            document.getElementById('match-date').value = matchData.date;
-            document.getElementById('match-time').value = matchData.time;
-
-            // Equipo local
-            document.getElementById('local-team-name').value = matchData.teams.local.name;
-            document.getElementById('local-team-color').value = matchData.teams.local.color;
-            document.getElementById('local-team-logo').value = matchData.teams.local.logo;
-            document.getElementById('local-team-coach').value = matchData.teams.local.coach;
-            document.getElementById('local-team-formation').value = matchData.teams.local.formation;
-
-            // Equipo visitante
-            document.getElementById('visitor-team-name').value = matchData.teams.visitor.name;
-            document.getElementById('visitor-team-color').value = matchData.teams.visitor.color;
-            document.getElementById('visitor-team-logo').value = matchData.teams.visitor.logo;
-            document.getElementById('visitor-team-coach').value = matchData.teams.visitor.coach;
-            document.getElementById('visitor-team-formation').value = matchData.teams.visitor.formation;
-        }
-
-        // Agregar jugador
-        function addPlayer(team, type) {
-            const containerId = `${team}-team-${type}-container`;
-            const container = document.getElementById(containerId);
-
-            const playerDiv = document.createElement('div');
-            playerDiv.className = 'bg-gray-50 p-3 rounded player-card';
-            playerDiv.innerHTML = `
-                <div class="grid grid-cols-12 gap-2 items-center">
-                    <div class="col-span-2">
-                        <input type="number" placeholder="N°" class="w-full p-1 border border-gray-300 rounded player-number" min="1" max="99">
-                    </div>
-                    <div class="col-span-7">
-                        <input type="text" placeholder="Nombre" class="w-full p-1 border border-gray-300 rounded player-name">
-                    </div>
-                    <div class="col-span-2">
-                        <select class="w-full p-1 border border-gray-300 rounded player-position">
-                            <option value="POR">POR</option>
-                            <option value="DEF">DEF</option>
-                            <option value="MED">MED</option>
-                            <option value="DEL">DEL</option>
-                        </select>
-                    </div>
-                    <div class="col-span-1 text-right">
-                        <button onclick="this.parentNode.parentNode.parentNode.remove()" class="text-red-500 hover:text-red-700">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+    <div class="min-h-full">
+        <!-- Sidebar original para desktop -->
+        <div class="hidden md:flex md:w-64 md:flex-col fixed inset-y-0">
+            <div class="flex flex-col flex-grow pt-5 bg-indigo-700 overflow-y-auto">
+                <div class="flex items-center flex-shrink-0 px-4">
+                    <h1 class="text-white text-2xl font-bold">Cesar Llaguento</h1>
                 </div>
-            `;
-
-            container.appendChild(playerDiv);
-        }
-
-        // Renderizar jugadores existentes
-        function renderPlayers(team, type) {
-            const containerId = `${team}-team-${type}-container`;
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-
-            matchData.teams[team][type].forEach(player => {
-                const playerDiv = document.createElement('div');
-                playerDiv.className = 'bg-gray-50 p-3 rounded player-card';
-                playerDiv.innerHTML = `
-                    <div class="grid grid-cols-12 gap-2 items-center">
-                        <div class="col-span-2">
-                            <input type="number" value="${player.number}" class="w-full p-1 border border-gray-300 rounded player-number" min="1" max="99">
-                        </div>
-                        <div class="col-span-7">
-                            <input type="text" value="${player.name}" class="w-full p-1 border border-gray-300 rounded player-name">
-                        </div>
-                        <div class="col-span-2">
-                            <select class="w-full p-1 border border-gray-300 rounded player-position">
-                                <option value="POR" ${player.position === 'POR' ? 'selected' : ''}>POR</option>
-                                <option value="DEF" ${player.position === 'DEF' ? 'selected' : ''}>DEF</option>
-                                <option value="MED" ${player.position === 'MED' ? 'selected' : ''}>MED</option>
-                                <option value="DEL" ${player.position === 'DEL' ? 'selected' : ''}>DEL</option>
-                            </select>
-                        </div>
-                        <div class="col-span-1 text-right">
-                            <button onclick="this.parentNode.parentNode.parentNode.remove()" class="text-red-500 hover:text-red-700">
-                                <i class="fas fa-times"></i>
+                <div class="mt-5 flex-1 flex flex-col">
+                    <nav class="flex-1 px-2 pb-4 space-y-1">
+                        <a href="#" class="bg-indigo-800 text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                        </a>
+                        
+                        <!-- Botón desplegable para Personas -->
+                        <div class="space-y-1">
+                            <button id="personas-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users mr-3"></i> Personas
+                                </div>
+                                <i id="personas-chevron" class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
-                        </div>
-                    </div>
-                `;
-
-                container.appendChild(playerDiv);
-            });
-        }
-
-        // Guardar configuración
-        function saveMatchConfig() {
-            // 1. Recopilar datos (código existente)
-            matchData = {
-                tournament: document.getElementById('tournament-name').value,
-                stadium: document.getElementById('stadium').value,
-                date: document.getElementById('match-date').value,
-                time: document.getElementById('match-time').value,
-                teams: {
-                    local: getTeamData('local'),
-                    visitor: getTeamData('visitor')
-                }
-            };
-
-            // 2. Guardar en localStorage
-            localStorage.setItem('tacticalMatchData', JSON.stringify(matchData));
-
-            // 3. Redirigir a visualización (opcional)
-            window.location.href = "futbol/visualizacion.html "; // Asegúrate de que el nombre coincida
-        }
-
-        // Obtener datos de un equipo
-        function getTeamData(team) {
-            return {
-                name: document.getElementById(`${team}-team-name`).value,
-                color: document.getElementById(`${team}-team-color`).value,
-                logo: document.getElementById(`${team}-team-logo`).value,
-                coach: document.getElementById(`${team}-team-coach`).value,
-                formation: document.getElementById(`${team}-team-formation`).value,
-                titulares: getPlayersData(`${team}-team-titulares-container`),
-                suplentes: getPlayersData(`${team}-team-suplentes-container`)
-            };
-        }
-
-        // Obtener datos de jugadores de un contenedor
-        function getPlayersData(containerId) {
-            const container = document.getElementById(containerId);
-            const playerElements = container.querySelectorAll('.bg-gray-50');
-
-            const players = [];
-            playerElements.forEach(playerEl => {
-                players.push({
-                    number: parseInt(playerEl.querySelector('.player-number').value),
-                    name: playerEl.querySelector('.player-name').value,
-                    position: playerEl.querySelector('.player-position').value
-                });
-            });
-
-            return players;
-        }
-
-        // Renderizar vista del partido
-        function renderMatchView() {
-            const container = document.getElementById('match-view-container');
-
-            // Crear HTML para la vista del partido
-            container.innerHTML = `
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h1 class="text-2xl font-bold text-center mb-2">${matchData.tournament}</h1>
-                    <p class="text-center text-gray-600 mb-6">${matchData.stadium} | ${formatDate(matchData.date)} ${matchData.time}</p>
-                    
-                    <!-- Marcador -->
-                    <div class="bg-gray-800 text-white p-4 rounded-xl shadow-lg mb-6">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div class="flex-1 text-center">
-                                <div class="text-xl font-bold" style="color: ${matchData.teams.local.color}">${matchData.teams.local.name}</div>
-                                <div class="text-5xl font-bold">0</div>
-                            </div>
-                            
-                            <div class="flex flex-col items-center">
-                                <div class="text-2xl font-mono font-bold bg-gray-700 px-6 py-1 rounded-lg">00'</div>
-                                <div class="text-sm mt-1 opacity-80">Primer Tiempo</div>
-                            </div>
-                            
-                            <div class="flex-1 text-center">
-                                <div class="text-xl font-bold" style="color: ${matchData.teams.visitor.color}">${matchData.teams.visitor.name}</div>
-                                <div class="text-5xl font-bold">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Campo de fútbol -->
-                    <div class="soccer-field w-full h-auto min-h-[500px] mx-auto mb-6 relative">
-                        <!-- Aquí iría el campo con jugadores posicionados según la formación -->
-                        <div class="text-center absolute inset-0 flex items-center justify-center text-gray-400">
-                            Vista previa del campo con formaciones ${matchData.teams.local.formation} vs ${matchData.teams.visitor.formation}
-                        </div>
-                    </div>
-                    
-                    <!-- Equipos -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Equipo Local -->
-                        <div class="bg-white border rounded-lg p-4 shadow-sm">
-                            <h3 class="text-xl font-bold mb-3 flex items-center">
-                                <div class="w-8 h-8 rounded-full mr-2" style="background: ${matchData.teams.local.color}"></div>
-                                ${matchData.teams.local.name}
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-3">Entrenador: ${matchData.teams.local.coach}</p>
-                            
-                            <div class="flex border-b border-gray-200 mb-3">
-                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Titulares</button>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2 mb-4">
-                                ${renderTeamPlayers(matchData.teams.local.titulares)}
-                            </div>
-                            
-                            <div class="flex border-b border-gray-200 mb-3">
-                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Suplentes</button>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                ${renderTeamPlayers(matchData.teams.local.suplentes)}
+                            <div id="personas-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-user-tie mr-3"></i> Trabajadores
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-truck mr-3"></i> Proveedores
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-user-friends mr-3"></i> Clientes
+                                </a>
                             </div>
                         </div>
                         
-                        <!-- Equipo Visitante -->
-                        <div class="bg-white border rounded-lg p-4 shadow-sm">
-                            <h3 class="text-xl font-bold mb-3 flex items-center">
-                                <div class="w-8 h-8 rounded-full mr-2" style="background: ${matchData.teams.visitor.color}"></div>
-                                ${matchData.teams.visitor.name}
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-3">Entrenador: ${matchData.teams.visitor.coach}</p>
-                            
-                            <div class="flex border-b border-gray-200 mb-3">
-                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Titulares</button>
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-cog mr-3"></i> Usuarios
+                        </a>
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-boxes mr-3"></i> Productos
+                        </a>
+                        
+                        <!-- Botón desplegable para Inventario -->
+                        <div class="space-y-1">
+                            <button id="inventario-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-warehouse mr-3"></i> Inventario
+                                </div>
+                                <i id="inventario-chevron" class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                            <div id="inventario-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-box-open mr-3"></i> Kardex
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-exchange-alt mr-3"></i> Devoluciones
+                                </a>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 mb-4">
-                                ${renderTeamPlayers(matchData.teams.visitor.titulares)}
+                        </div>
+                        
+                        <!-- Botón desplegable para Transacciones -->
+                        <div class="space-y-1">
+                            <button id="transacciones-dropdown-btn" class="text-indigo-100 hover:bg-indigo-600 group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exchange-alt mr-3"></i> Transacciones
+                                </div>
+                                <i id="transacciones-chevron" class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                            <div id="transacciones-dropdown" class="dropdown-menu pl-5 space-y-1">
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-cash-register mr-3"></i> Caja
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-shopping-cart mr-3"></i> Ventas
+                                </a>
+                                <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                                    <i class="fas fa-shopping-basket mr-3"></i> Compras
+                                </a>
                             </div>
-                            
-                            <div class="flex border-b border-gray-200 mb-3">
-                                <button class="py-1 px-3 font-medium border-b-2 border-blue-500">Suplentes</button>
+                        </div>
+                        
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3"></i> Reportes
+                        </a>
+                        <a href="#" class="text-indigo-100 hover:bg-indigo-600 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cog mr-3"></i> Configuración
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="md:pl-64 flex flex-col">
+            <!-- Barra superior -->
+            <div class="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow">
+                <div class="flex-1 px-4 flex justify-between">
+                    <div class="flex items-center md:hidden">
+                        <button id="mobile-menu-button" class="p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 flex">
+                        <div class="relative w-full text-gray-400 focus-within:text-gray-600">
+                            <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                                <i class="fas fa-search"></i>
                             </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                ${renderTeamPlayers(matchData.teams.visitor.suplentes)}
+                            <input class="block w-full h-full pl-8 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 sm:text-sm" placeholder="Buscar" type="search">
+                        </div>
+                    </div>
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <button type="button" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="ml-3 relative">
+                            <button id="user-menu" class="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none">
+                                <img class="h-8 w-8 rounded-full" src="https://via.placeholder.com/32" alt="Avatar">
+                            </button>
+                            <div id="user-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tu perfil</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configuración</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar sesión</a>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-        }
+            </div>
 
-        // Renderizar jugadores para la vista
-        function renderTeamPlayers(players) {
-            return players.map(player => `
-                <div class="bg-gray-50 p-2 rounded text-center text-sm player-card">
-                    <div class="font-bold">${player.number}</div>
-                    <div>${player.name}</div>
-                    <div class="text-xs text-gray-500">${player.position}</div>
+            <!-- Contenido del dashboard -->
+            <main class="flex-1 bg-gray-50">
+                <div class="py-6">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                        <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+                    </div>
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-6">
+                        <!-- Widgets del dashboard -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Widget de Trabajadores -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                                        <i class="fas fa-user-tie text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Trabajadores</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">24</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Proveedores -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                        <i class="fas fa-truck text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Proveedores</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">15</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Clientes -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                        <i class="fas fa-user-friends text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Clientes</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">142</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Usuarios -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                        <i class="fas fa-user-cog text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Usuarios</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">8</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Compras -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                        <i class="fas fa-shopping-basket text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Compras</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">56</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Kardex -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-red-100 text-red-600">
+                                        <i class="fas fa-box-open text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Kardex</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">342</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Devoluciones -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-pink-100 text-pink-600">
+                                        <i class="fas fa-exchange-alt text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Devoluciones</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">12</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Widget de Caja -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-teal-100 text-teal-600">
+                                        <i class="fas fa-cash-register text-xl"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Caja</h3>
+                                        <p class="text-2xl font-semibold text-gray-800">S/ 8,450.00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráficos -->
+                        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Gráfico de Ventas -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Ventas mensuales</h3>
+                                <canvas id="salesChart" height="250"></canvas>
+                            </div>
+                            
+                            <!-- Gráfico de Inventario -->
+                            <div class="card-hover bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Movimiento de inventario</h3>
+                                <canvas id="inventoryChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            `).join('');
-        }
+            </main>
+        </div>
+    </div>
 
-        // Formatear fecha
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString('es-ES', options);
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del menú móvil
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuClose = document.getElementById('mobile-menu-close');
+            const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+            
+            // Elementos del dropdown de usuario
+            const userMenu = document.getElementById('user-menu');
+            const userDropdown = document.getElementById('user-dropdown');
+
+            // Elementos del dropdown de Personas (desktop)
+            const personasDropdownBtn = document.getElementById('personas-dropdown-btn');
+            const personasDropdown = document.getElementById('personas-dropdown');
+            const personasChevron = document.getElementById('personas-chevron');
+
+            // Elementos del dropdown de Personas (mobile)
+            const mobilePersonasDropdownBtn = document.getElementById('mobile-personas-dropdown-btn');
+            const mobilePersonasDropdown = document.getElementById('mobile-personas-dropdown');
+
+            // Elementos del dropdown de Inventario (desktop)
+            const inventarioDropdownBtn = document.getElementById('inventario-dropdown-btn');
+            const inventarioDropdown = document.getElementById('inventario-dropdown');
+            const inventarioChevron = document.getElementById('inventario-chevron');
+
+            // Elementos del dropdown de Inventario (mobile)
+            const mobileInventarioDropdownBtn = document.getElementById('mobile-inventario-dropdown-btn');
+            const mobileInventarioDropdown = document.getElementById('mobile-inventario-dropdown');
+
+            // Elementos del dropdown de Transacciones (desktop)
+            const transaccionesDropdownBtn = document.getElementById('transacciones-dropdown-btn');
+            const transaccionesDropdown = document.getElementById('transacciones-dropdown');
+            const transaccionesChevron = document.getElementById('transacciones-chevron');
+
+            // Elementos del dropdown de Transacciones (mobile)
+            const mobileTransaccionesDropdownBtn = document.getElementById('mobile-transacciones-dropdown-btn');
+            const mobileTransaccionesDropdown = document.getElementById('mobile-transacciones-dropdown');
+
+            // Función para abrir el menú móvil
+            function openMobileMenu() {
+                mobileMenu.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            // Función para cerrar el menú móvil
+            function closeMobileMenu() {
+                mobileMenu.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            // Función para alternar dropdown
+            function toggleDropdown(dropdown, chevron = null) {
+                dropdown.classList.toggle('show');
+                if (chevron) {
+                    chevron.classList.toggle('rotate-90');
+                }
+            }
+
+            // Event listeners para el menú móvil
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', openMobileMenu);
+            }
+            
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+            
+            if (mobileMenuBackdrop) {
+                mobileMenuBackdrop.addEventListener('click', closeMobileMenu);
+            }
+
+            // Event listeners para el dropdown de usuario
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function() {
+                    userDropdown.classList.add('hidden');
+                });
+            }
+
+            // Event listeners para el dropdown de Personas (desktop)
+            if (personasDropdownBtn && personasDropdown) {
+                personasDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown(personasDropdown, personasChevron);
+                });
+            }
+
+            // Event listeners para el dropdown de Personas (mobile)
+            if (mobilePersonasDropdownBtn && mobilePersonasDropdown) {
+                mobilePersonasDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const chevron = this.querySelector('i.fa-chevron-down');
+                    toggleDropdown(mobilePersonasDropdown, chevron);
+                });
+            }
+
+            // Event listeners para el dropdown de Inventario (desktop)
+            if (inventarioDropdownBtn && inventarioDropdown) {
+                inventarioDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown(inventarioDropdown, inventarioChevron);
+                });
+            }
+
+            // Event listeners para el dropdown de Inventario (mobile)
+            if (mobileInventarioDropdownBtn && mobileInventarioDropdown) {
+                mobileInventarioDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const chevron = this.querySelector('i.fa-chevron-down');
+                    toggleDropdown(mobileInventarioDropdown, chevron);
+                });
+            }
+
+            // Event listeners para el dropdown de Transacciones (desktop)
+            if (transaccionesDropdownBtn && transaccionesDropdown) {
+                transaccionesDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleDropdown(transaccionesDropdown, transaccionesChevron);
+                });
+            }
+
+            // Event listeners para el dropdown de Transacciones (mobile)
+            if (mobileTransaccionesDropdownBtn && mobileTransaccionesDropdown) {
+                mobileTransaccionesDropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const chevron = this.querySelector('i.fa-chevron-down');
+                    toggleDropdown(mobileTransaccionesDropdown, chevron);
+                });
+            }
+
+            // Cerrar dropdowns al hacer clic fuera de ellos
+            document.addEventListener('click', function(e) {
+                // Solo cerrar si el clic no fue dentro de un dropdown
+                if (!e.target.closest('.dropdown-menu') && !e.target.closest('[id$="dropdown-btn"]')) {
+                    if (personasDropdown && personasDropdown.classList.contains('show')) {
+                        toggleDropdown(personasDropdown, personasChevron);
+                    }
+                    if (inventarioDropdown && inventarioDropdown.classList.contains('show')) {
+                        toggleDropdown(inventarioDropdown, inventarioChevron);
+                    }
+                    if (transaccionesDropdown && transaccionesDropdown.classList.contains('show')) {
+                        toggleDropdown(transaccionesDropdown, transaccionesChevron);
+                    }
+                    if (mobilePersonasDropdown && mobilePersonasDropdown.classList.contains('show')) {
+                        const chevron = mobilePersonasDropdownBtn.querySelector('i.fa-chevron-down');
+                        toggleDropdown(mobilePersonasDropdown, chevron);
+                    }
+                    if (mobileInventarioDropdown && mobileInventarioDropdown.classList.contains('show')) {
+                        const chevron = mobileInventarioDropdownBtn.querySelector('i.fa-chevron-down');
+                        toggleDropdown(mobileInventarioDropdown, chevron);
+                    }
+                    if (mobileTransaccionesDropdown && mobileTransaccionesDropdown.classList.contains('show')) {
+                        const chevron = mobileTransaccionesDropdownBtn.querySelector('i.fa-chevron-down');
+                        toggleDropdown(mobileTransaccionesDropdown, chevron);
+                    }
+                }
+            });
+
+            // Inicializar gráficos
+            initCharts();
+        });
+
+        // Función para inicializar gráficos
+        function initCharts() {
+            // Gráfico de ventas
+            const salesCtx = document.getElementById('salesChart');
+            if (salesCtx) {
+                new Chart(salesCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                        datasets: [{
+                            label: 'Ventas 2023',
+                            data: [5000, 8000, 6500, 9000, 12000, 15000, 14000, 16000, 12500, 11000, 9500, 18000],
+                            borderColor: '#4F46E5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de inventario
+            const inventoryCtx = document.getElementById('inventoryChart');
+            if (inventoryCtx) {
+                new Chart(inventoryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Producto A', 'Producto B', 'Producto C', 'Producto D', 'Producto E'],
+                        datasets: [{
+                            label: 'Entradas',
+                            data: [120, 190, 90, 140, 110],
+                            backgroundColor: '#10B981',
+                            borderWidth: 1
+                        }, {
+                            label: 'Salidas',
+                            data: [80, 110, 70, 100, 90],
+                            backgroundColor: '#EF4444',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
     </script>
 </body>
-
 </html>
